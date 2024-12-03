@@ -69,3 +69,6 @@
   (winswap--shift-buffers (reverse (winswap--siblings-windows))))
 
 
+
+(provide 'winswap)
+;;; winswap.el ends here
