@@ -69,6 +69,31 @@
   (winswap--shift-buffers (reverse (winswap--siblings-windows))))
 
 
+(defun winswap-change-direction ()
+  (interactive)
+  (let ((win-list (winswap--siblings-windows)))
+    (if (length> win-list 1)
+	(let* ((is-horizontal (eq (winswap--layout-direction)
+				  'horizontal))
+	       (win-inx (seq-position win-list (selected-window)))
+	       (win-count (length win-list))
+	       (bufs (mapcar #'window-buffer win-list))
+	       (split-fn (if is-horizontal #'split-window-below  #'split-window-right)))
+
+	  (delete-other-windows)
+	  
+	  (let ((sz (round (/ (window-total-size nil (not is-horizontal))
+		       win-count))))
+	    (dotimes (_ (1- win-count))
+	      (funcall split-fn (- sz)))
+
+	    (let ((new-win-list (winswap--siblings-windows)))
+	      (seq-mapn (lambda (w b) (set-window-buffer w b))
+			new-win-list
+			bufs)
+
+	      (select-window (nth win-inx new-win-list))))))))
+
 
 (provide 'winswap)
 ;;; winswap.el ends here
