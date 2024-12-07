@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2024 Evgeniy Turishev
 
-;; Author: Evgeniy Turishev evgeniy.turishev@area9.dk
+;; Author: Evgeniy Turishev ew_turi@mail.ru
 
 ;; This file is not part of GNU Emacs.
 
@@ -28,7 +28,7 @@
 
 
 (defun winswap--siblings-windows ()
-  "returns nil if selected-window have not a parent"
+  "returns list of siblings windows, returns nil if selected-window have not a parent"
   (letrec ((curr-win (selected-window))
 	   (win-traverse (lambda (w)
 			   (when (window-live-p w)
@@ -40,6 +40,7 @@
 
 
 (defun winswap--shift-buffers (win-list)
+  "shift buffers inside windows from left to right or from top to down"
   (if (length> win-list 1)
       (let* ((curr-buf (current-buffer))
 	     (buffers (mapcar #'window-buffer win-list))
@@ -70,9 +71,11 @@
 
 
 (defun winswap-change-direction ()
+  "swap layout of siblings windows, change vertical to horizontal or, conversely, horizontal to vertical,
+ other windows will be closed"
   (interactive)
   (let ((win-list (winswap--siblings-windows)))
-    (if (length> win-list 1)
+    (when (length> win-list 1)
 	(let* ((is-horizontal (eq (winswap--layout-direction)
 				  'horizontal))
 	       (win-inx (seq-position win-list (selected-window)))
