@@ -43,6 +43,9 @@
 ;;
 ;; set project directory explicitly
 ;;   M-x compile-target-set-dir
+;;
+;; When compile-target is used along with project.el, it will try to use project.el root dir,
+;; set compile-target-ignore-project-el to t to disable this kind behaviour.
 
 (require 'cl-lib)
 (require 'compile)
@@ -54,6 +57,9 @@
 (defvar compile-target-project-directory "./"
   "compile-target project directory, default value is './'")
 
+(defvar compile-target-ignore-project-el nil
+  "force compile-target to ignore project.el root directory")
+
 (defvar compile-target-target-list ()
   "compile-target targets list")
 
@@ -62,6 +68,15 @@
 
 (defvar compile-target-after-open-project nil
   "a hook-like function to check project state after project loaded")
+
+(defun compile-target--get-project-el-root-dir ()
+  "get project.el root directory"
+  (project-root (project-current nil)))
+
+(defun compile-target--get-compile-dir ()
+  (or (and (not compile-target-ignore-project-el)
+	   (compile-target--get-project-el-root-dir))
+      compile-target-project-directory))
 
 
 (defun compile-target-add (name compile-cmd)
@@ -96,7 +111,8 @@
   (setq compile-target-project-file project-file-name)
   (setq compile-target-project-directory (file-name-directory project-file-name))
   (message "compile-target project:%s" project-file-name)
-  (message "compile-target directory:%s" compile-target-project-directory)
+  (message "compile-target project directory:%s" compile-target-project-directory)
+  (message "compile-target compile directory:%s" (compile-target--get-compile-dir))
   (load-file project-file-name)
   (when (functionp compile-target-after-open-project)
     (funcall compile-target-after-open-project)))
@@ -130,7 +146,8 @@
 	      (curr-dir default-directory))
 
 	  (setq compile-target-default-target target-name)
-	  (cd compile-target-project-directory)
+	  (message "compile dir:%s" (compile-target--get-compile-dir))
+	  (cd (compile-target--get-compile-dir))
 	  (compile compile-cmd)
 	  (cd curr-dir))
       (message "Target '%s' not found" target-name))))
