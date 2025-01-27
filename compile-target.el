@@ -57,8 +57,8 @@
 (defvar compile-target-project-directory "./"
   "compile-target project directory, default value is './'")
 
-(defvar compile-target-ignore-project-el nil
-  "force compile-target to ignore project.el root directory")
+(defvar compile-target-use-project-el nil
+  "use compile-target project.el root directory to compile targets")
 
 (defvar compile-target-target-list ()
   "compile-target targets list")
@@ -74,7 +74,7 @@
   (project-root (project-current nil)))
 
 (defun compile-target--get-compile-dir ()
-  (or (and (not compile-target-ignore-project-el)
+  (or (and (compile-target-use-project-el)
 	   (compile-target--get-project-el-root-dir))
       compile-target-project-directory))
 
