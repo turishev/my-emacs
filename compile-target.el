@@ -92,7 +92,7 @@
 		    (cl-delete name compile-target-target-list
 			       :test 'equal
 			       :key (lambda (proj) (plist-get proj 'name))))))
-    (message "load project error: name:'%s'" name)))
+    (message "compile-target, project name error:'%s'" name)))
 
 
 (defun compile-target-clear-target-list ()
