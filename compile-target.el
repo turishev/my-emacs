@@ -1,6 +1,6 @@
 ;; compile-target.el --- Simple project management minor mode  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2024 Evgeniy Turishev
+;; Copyright (C) 2025 Evgeniy Turishev
 
 ;; Author: Evgeniy Turishev evgeniy.turishev@area9.dk
 
@@ -80,7 +80,7 @@
 
 
 (defun compile-target-add (name compile-cmd)
-  "Add target to (or replace in) the tragets list"
+  "Add target to (or replace in) the targets list"
   (interactive "sName:\nsCommand:")
   (if (stringp name)
       (progn
