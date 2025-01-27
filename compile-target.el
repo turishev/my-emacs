@@ -54,13 +54,13 @@
 (defvar compile-target-project-file nil
   "compile-target current project file name")
 
-(defvar compile-target-project-directory "./"
-  "compile-target project directory, default value is './'")
+(defvar compile-target-project-directory nil
+  "compile-target project directory")
 
 (defvar compile-target-use-project-el nil
   "use compile-target project.el root directory to compile targets")
 
-(defvar compile-target-target-list ()
+(defvar compile-target-targets-list ()
   "compile-target targets list")
 
 (defvar compile-target-default-target nil
@@ -69,40 +69,57 @@
 (defvar compile-target-after-open-project nil
   "a hook-like function to check project state after project loaded")
 
+
 (defun compile-target--get-project-el-root-dir ()
   "get project.el root directory"
   (project-root (project-current nil)))
 
-(defun compile-target--get-compile-dir ()
+
+(defun compile-target--get-default-compile-dir ()
   (or (and compile-target-use-project-el
 	   (compile-target--get-project-el-root-dir))
-      compile-target-project-directory))
+      compile-target-project-directory
+      default-directory))
 
 
-(defun compile-target-add (name compile-cmd)
+(defun compile-target--get-compile-dir (target-dir)
+  (if target-dir
+      (if (file-name-absolute-p target-dir)
+	  target-dir
+	(file-name-concat (compile-target--get-default-compile-dir)
+			  target-dir))
+    (compile-target--get-default-compile-dir)))
+
+
+(defun compile-target-add (name compile-cmd compile-dir)
   "Add target to (or replace in) the targets list"
-  (interactive "sName:\nsCommand:")
+  (interactive "sName:\nsCommand:\nsDirectory:")
   (if (stringp name)
-      (progn
+      (let ((dir (string-trim compile-dir)))
 	(setq compile-target-default-target name)
-	(setq compile-target-target-list
+	(setq compile-target-targets-list
 	      (cons (list
 		     'name name
-		     'compile-cmd compile-cmd)
-		    (cl-delete name compile-target-target-list
+		     'cmd compile-cmd
+		     'dir (when (/= 0 (length dir)) dir))
+		    (cl-delete name
+			       compile-target-targets-list
 			       :test 'equal
 			       :key (lambda (proj) (plist-get proj 'name))))))
-    (message "compile-target, project name error:'%s'" name)))
+    (message "compile-target-add, target name error:'%s'" name)))
 
 
 (defun compile-target-clear-target-list ()
  "Clear target list"
   (interactive)
-  (setq compile-target-target-list nil))
+  (setq compile-target-targets-list nil))
 
 
 (defun compile-target-proj-find (target-name)
-  (cl-find target-name compile-target-target-list :test 'equal :key (lambda (proj) (plist-get proj 'name))))
+  (cl-find target-name
+	   compile-target-targets-list
+	   :test 'equal
+	   :key (lambda (proj) (plist-get proj 'name))))
 
 
 (defun compile-target-open-project (project-file-name)
@@ -110,9 +127,9 @@
   (interactive	"fProject file: ")
   (setq compile-target-project-file project-file-name)
   (setq compile-target-project-directory (file-name-directory project-file-name))
-  (message "compile-target project:%s" project-file-name)
-  (message "compile-target project directory:%s" compile-target-project-directory)
-  (message "compile-target compile directory:%s" (compile-target--get-compile-dir))
+  (message "compile-target-open-project project:%s" project-file-name)
+  (message "compile-target-open-project project directory:%s" compile-target-project-directory)
+  (message "compile-target-open-project compile directory:%s" (compile-target--get-compile-dir))
   (load-file project-file-name)
   (when (functionp compile-target-after-open-project)
     (funcall compile-target-after-open-project)))
@@ -122,7 +139,8 @@
   (interactive)
   (if (fboundp 'ido-completing-read)
       (progn
-        (setq target-name (ido-completing-read "Compile target: " (mapcar 'cadr compile-target-target-list)))
+        (setq target-name (ido-completing-read "Compile target: "
+					       (mapcar 'cadr compile-target-targets-list)))
         (compile-target-compile target-name))
     (message "ido not found")))
 
@@ -131,7 +149,7 @@
   (interactive)
   (if (fboundp 'ivy-read)
       (progn
-        (setq target-name (ivy-read "Compile target: " (mapcar 'cadr compile-target-target-list)))
+        (setq target-name (ivy-read "Compile target: " (mapcar 'cadr compile-target-targets-list)))
         (compile-target-compile target-name))
     (message "ivy not found")))
 
@@ -139,15 +157,14 @@
 (defun compile-target-compile (target-name)
   "Compile project's target"
   (interactive	"sTarget name: ")
-  (let ((proj (compile-target-proj-find target-name)))
-    (if proj
-	(let ((compile-cmd (plist-get proj 'compile-cmd))
-	      (work-dir (plist-get proj 'work-dir))
+  (let ((target (compile-target-proj-find target-name)))
+    (if target
+	(let ((compile-cmd (plist-get target 'cmd))
+	      (dir (plist-get target 'dir))
 	      (curr-dir default-directory))
 
 	  (setq compile-target-default-target target-name)
-	  (message "compile dir:%s" (compile-target--get-compile-dir))
-	  (cd (compile-target--get-compile-dir))
+	  (cd (compile-target--get-compile-dir dir))
 	  (compile compile-cmd)
 	  (cd curr-dir))
       (message "Target '%s' not found" target-name))))
