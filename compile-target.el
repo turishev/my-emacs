@@ -74,7 +74,7 @@
   (project-root (project-current nil)))
 
 (defun compile-target--get-compile-dir ()
-  (or (and (compile-target-use-project-el)
+  (or (and compile-target-use-project-el
 	   (compile-target--get-project-el-root-dir))
       compile-target-project-directory))
 
