@@ -46,6 +46,25 @@
 ;;
 ;; When compile-target is used along with project.el, it will try to use project.el root dir,
 ;; set compile-target-ignore-project-el to t to disable this kind behaviour.
+;;
+;; Alternatively you can set variables directly in some a elisp script:
+;;
+;; (setq compile-target-use-project-el t)
+;; (setq compile-target-targets-list  '((name "ls" cmd "ls -ax" dir "../")
+;;                                      (name "target-2" cmd "cmd-2" dir "dir-2")))
+;;
+;; or using .dir-locals:
+;;
+;; ((nil . (
+;; 	 (eval . (progn
+;; 		   (compile-target-mode 1)
+;; 		   t))
+;; 	 (compile-target-use-project-el t)
+;; 	 (compile-target-targets-list . ((name "ls" cmd "ls -ax" dir "../")
+;; 					 (name "target-2" cmd "cmd-2" dir "dir-2")))
+;; 	 )))
+
+
 
 (require 'cl-lib)
 (require 'compile)
@@ -101,7 +120,7 @@
 	      (cons (list
 		     'name name
 		     'cmd compile-cmd
-		     'dir (when (/= 0 (length dir)) dir))
+		     'dir (when dir dir))
 		    (cl-delete name
 			       compile-target-targets-list
 			       :test 'equal
