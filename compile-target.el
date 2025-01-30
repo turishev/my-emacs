@@ -110,11 +110,11 @@
     (compile-target--get-default-compile-dir)))
 
 
-(defun compile-target-add (name compile-cmd compile-dir)
+(defun compile-target-add-with-dir (name compile-cmd compile-dir)
   "Add target to (or replace in) the targets list"
   (interactive "sName:\nsCommand:\nsDirectory:")
   (if (stringp name)
-      (let ((dir (string-trim compile-dir)))
+      (let ((dir (when (stringp compile-dir) (string-trim compile-dir))))
 	(setq compile-target-default-target name)
 	(setq compile-target-targets-list
 	      (cons (list
@@ -126,6 +126,12 @@
 			       :test 'equal
 			       :key (lambda (proj) (plist-get proj 'name))))))
     (message "compile-target-add, target name error:'%s'" name)))
+
+
+(defun compile-target-add (name compile-cmd)
+  "Add target to (or replace in) the targets list"
+  (interactive "sName:\nsCommand:")
+  (compile-target-add-with-dir name compile-cmd nil))
 
 
 (defun compile-target-clear-target-list ()
@@ -147,8 +153,6 @@
   (setq compile-target-project-file project-file-name)
   (setq compile-target-project-directory (file-name-directory project-file-name))
   (message "compile-target-open-project project:%s" project-file-name)
-  (message "compile-target-open-project project directory:%s" compile-target-project-directory)
-  (message "compile-target-open-project compile directory:%s" (compile-target--get-compile-dir))
   (load-file project-file-name)
   (when (functionp compile-target-after-open-project)
     (funcall compile-target-after-open-project)))
